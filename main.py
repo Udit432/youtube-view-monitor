@@ -6,8 +6,8 @@ from flask import Flask, request
 app = Flask(__name__)
 
 # ===== CONFIG =====
-API_KEY = "AIzaSyCyE7_90eTzXOq-j38cVA2I7tptYnkSsa4"
-BOT_TOKEN = "8333654766:AAHuJE8_DBl_Rt_aBcWaaLWanN7MXtsP2HQ"
+API_KEY = "AIzaSyDT0FGdoRzoH29r_2r4B8HqgAySh71WDqc"
+BOT_TOKEN = "8601479357:AAHEDqZUTzwRvFt1Uyl9nvs81xUT_VhsJFA"
 
 CHAT_ID = None
 VIDEO_ID = None
