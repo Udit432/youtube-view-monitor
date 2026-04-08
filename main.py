@@ -9,6 +9,7 @@ app = Flask(__name__)
 API_KEY = "AIzaSyDT0FGdoRzoH29r_2r4B8HqgAySh71WDqc"
 BOT_TOKEN = "8601479357:AAHEDqZUTzwRvFt1Uyl9nvs81xUT_VhsJFA"
 
+
 CHAT_ID = None
 VIDEO_ID = None
 tracking = False
@@ -17,18 +18,20 @@ alert_active = False
 
 # ===== TELEGRAM SEND =====
 def send_alert(message):
+    if CHAT_ID is None:
+        return
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
     requests.post(url, data={
         "chat_id": CHAT_ID,
         "text": message
     })
 
-# ===== ALARM SYSTEM =====
+# ===== 🔥 CONTINUOUS ALARM SYSTEM =====
 def trigger_alarm(message):
     global alert_active
 
     if alert_active:
-        return
+        return  # already running
 
     alert_active = True
 
@@ -36,11 +39,8 @@ def trigger_alarm(message):
         global alert_active
 
         while alert_active:
-            for i in range(10):  # 🔥 burst alerts
-                send_alert(f"🚨 {message} 🚨")
-                time.sleep(1)
-
-            time.sleep(10)  # gap then repeat
+            send_alert(f"🚨 {message} 🚨")
+            time.sleep(2)  # 🔥 every 2 sec alert
 
     threading.Thread(target=alarm_loop, daemon=True).start()
 
@@ -60,10 +60,11 @@ def background_worker():
                 current_views = get_views()
                 print("Views:", current_views)
 
-                if last_views is not None:
-                    if current_views < last_views:
-                        drop = last_views - current_views
-                        trigger_alarm(f"VIEWS DROP\nPrev: {last_views}\nNow: {current_views}\nDrop: {drop}")
+                if last_views is not None and current_views < last_views:
+                    drop = last_views - current_views
+                    trigger_alarm(
+                        f"VIEWS DROP\nPrev: {last_views}\nNow: {current_views}\nDrop: {drop}"
+                    )
 
                 last_views = current_views
 
@@ -78,7 +79,10 @@ def webhook():
     global tracking, VIDEO_ID, CHAT_ID, alert_active
 
     if request.method == "POST":
-        data = request.json
+        data = request.get_json(silent=True)
+
+        if not data:
+            return "OK"
 
         if 'message' in data:
             chat_id = data['message']['chat']['id']
@@ -104,6 +108,11 @@ def webhook():
             elif text.startswith("/stopalert"):
                 alert_active = False
                 send_alert("🛑 Alert Stopped")
+
+            elif text.startswith("/panic"):
+                alert_active = False
+                tracking = False
+                send_alert("💣 ALL STOPPED")
 
     return "OK"
 
